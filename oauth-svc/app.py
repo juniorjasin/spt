@@ -27,7 +27,7 @@ public_key_file = os.path.join(os.path.dirname(__file__), 'keys', 'svc-key.pub')
 with open(public_key_file, 'r') as fd:
     public_key = RSA.importKey(fd.read())
 
-
+#testeo insercion en la base de datos
 def mysqlConfig():
 
     try:
@@ -44,7 +44,6 @@ def mysqlConfig():
     finally:
         if cnx:
             cnx.close()
-
 
 
 @app.route('/hello', method="GET")
@@ -64,6 +63,7 @@ def test():
     print data
     ret = {"status": "OK", "token": data}
     return ret
+
 
 #valida usuario y password en la base de datos
 @app.post('/login')
@@ -88,6 +88,7 @@ def login():
         result = cursor.fetchone()
         print("result:")
         print(result)
+
         if(not result):
             print ("usuario no existe en base de datos")
             ret = {"status": "FAIL", "msg": "usuario y/o password invalido"}
@@ -149,25 +150,22 @@ def register():
                 cursor.close()
 
                 payload = {'username': usr, 'role': 'admin'};
-                token = jwt.generate_jwt(payload, private_key, 'RS256', datetime.timedelta(minutes=5))
+                token = jwt.generate_jwt(payload, private_key, 'RS256', datetime.timedelta(minutes=20))
                 ret = {"status": "OK",
                        "msg": "usuario creado correctamente",
                        "token": token
                        }
                 return ret
             else:
-                cnx.commit()
                 cursor.close()
                 ret = {"status": "FAIL", "msg": "passwords no eran iguales"}
                 return ret
 
         else:
             print ("usuario existe en la base de datos")
-            cnx.commit()
             cursor.close()
             ret = {"status": "FAIL", "msg": "usuario ya existe."}
             return ret
-        cnx.commit()
         cursor.close()
     except pymysql.Error as err:
         print "Failed to insert data: {}".format(err)
@@ -176,8 +174,9 @@ def register():
             cnx.close()
 
 
-
+'''
 if __name__ == '__main__':
     mysqlConfig()
+'''
 
 run(app, host='127.0.0.1', port=8081)
