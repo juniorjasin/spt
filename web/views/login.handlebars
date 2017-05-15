@@ -1,0 +1,20 @@
+<body style="text-align: center; background: lightblue">
+    <h1> SPT </h1>
+    {{#if status}}
+    <h4> {{status}} </h4>
+    {{/if}}
+    <form action="/verify_user" method="post">
+        <label >User</label>
+        <input type="text" name="nombre" value="" />
+        <br/>
+        <label>Password</label>
+        <input type="password" name="pass" value="" />
+        <br/>
+        <br/>
+        <input type="submit" value="Login" />
+    </form>
+
+
+    <br/>
+    <a href="/register"> <button>Sing In</button> </a>
+</body>
