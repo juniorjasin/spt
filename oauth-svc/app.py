@@ -13,9 +13,6 @@ mysql_config = {
     'passwd': 'coke'
 }
 
-usuarios = {}
-usuarios['junior'] = "123"
-usuarios['andi'] = "456"
 
 #clave privada, para crear token
 private_key_file = os.path.join(os.path.dirname(__file__), 'keys','svc-key')
@@ -50,10 +47,12 @@ def mysqlConfig():
 def hello():
     return "Hello World!"
 
+
 @app.get('/')
 @app.get('/hello/<name>')
 def greet(name='Stranger'):
     return template('Hello {{name2}}', name2=name)
+
 
 #funcion que testea si se recibio token
 @app.get('/test')
@@ -92,7 +91,7 @@ def login():
         if(not result):
             print ("usuario no existe en base de datos")
             ret = {"status": "FAIL", "msg": "usuario y/o password invalido"}
-            return ret
+
         else:
             print ("usuario existe => comprobar password")
             if(result[1] == psw):
@@ -105,11 +104,10 @@ def login():
                        "token":token
                        }
 
-                return ret
             else:
                 print ("password estaba mal")
                 ret = {"status": "FAIL", "msg": "usuario y/o password invalido"}
-                return ret
+
         cnx.commit()
         cursor.close()
     except pymysql.Error as err:
@@ -117,6 +115,9 @@ def login():
     finally:
         if cnx:
             cnx.close()
+
+    return ret
+
 
 #valida registro en base de datos, controlando no existe otro usuario identico
 @app.post('/register')
@@ -155,17 +156,17 @@ def register():
                        "msg": "usuario creado correctamente",
                        "token": token
                        }
-                return ret
+
             else:
                 cursor.close()
                 ret = {"status": "FAIL", "msg": "passwords no eran iguales"}
-                return ret
+
 
         else:
             print ("usuario existe en la base de datos")
             cursor.close()
             ret = {"status": "FAIL", "msg": "usuario ya existe."}
-            return ret
+
         cursor.close()
     except pymysql.Error as err:
         print "Failed to insert data: {}".format(err)
@@ -173,10 +174,8 @@ def register():
         if cnx:
             cnx.close()
 
+    return ret
 
-'''
-if __name__ == '__main__':
-    mysqlConfig()
-'''
+
 
 run(app, host='127.0.0.1', port=8081)
