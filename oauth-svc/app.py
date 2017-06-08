@@ -3,16 +3,34 @@ import pymysql
 import os
 import datetime
 import python_jwt as jwt
+import logging
 import Crypto.PublicKey.RSA as RSA
 app = Bottle()
 
+logger = loggin.getLogger('oauth-svc')
+logger.setLevel(loggin.DEBUG)
+logger.propagate = False
+ch = loggin.StreamHandler()
+ch.setLevel(loggin.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+
+
+mysql_config = {
+    'host': os.environ['MYSQL_ENDPOINT'],
+    'db': os.environ['MYSQL_DATABASE'],
+    'user': os.environ['MYSQL_USER'],
+    'passwd': os.environ['MYSQL_PASSWORD']
+}
+
+'''
 mysql_config = {
     'host': 'localhost',
     'db': 'spt',
     'user': 'root',
     'passwd': 'coke'
 }
-
+'''
 
 #clave privada, para crear token
 private_key_file = os.path.join(os.path.dirname(__file__), 'keys','svc-key')
@@ -24,9 +42,25 @@ public_key_file = os.path.join(os.path.dirname(__file__), 'keys', 'svc-key.pub')
 with open(public_key_file, 'r') as fd:
     public_key = RSA.importKey(fd.read())
 
+def init_db():
+    cnx = None
+    try:
+        cnx = pymysql.connect(**mysql_config)
+        cursor = cnx.cursor()
+        create_table = "create table if not exists spt.usuarios (username varchar(30), password varchar(20))"
+        cursor.execute(create_table)
+        cursor.close
+    except pymysql.Error as err:
+        msg = "Failed init database {}".format(err)
+    finally:
+        if cnx:
+            cnx.close()
+
+
 #testeo insercion en la base de datos
 def mysqlConfig():
 
+    cnx = None
     try:
         cnx = pymysql.connect(**mysql_config)
         cursor = cnx.cursor()
@@ -38,9 +72,11 @@ def mysqlConfig():
         cursor.close()
     except pymysql.Error as err:
         print "Failed to insert data: {}".format(err)
+        ret = {"status": "FAIL", "msg": err}
     finally:
         if cnx:
             cnx.close()
+    return ret
 
 
 @app.route('/hello', method="GET")
@@ -57,6 +93,8 @@ def greet(name='Stranger'):
 #funcion que testea si se recibio token
 @app.get('/test')
 def test():
+    if not request.json:
+        return {"error":"token no recibido"}
     data = request.headers['Authorization']
     print "funcion test \n header:"
     print data
@@ -72,13 +110,14 @@ def login():
     usr = data['usuario']
     psw = data['password']
 
-    u = usuarios.get(usr)
+
     print("recibi:")
     print("usuario:" + usr)
     print("password:" + psw + "\n\n")
 
 
     # deberia hacer la conexion a la bd una sola vez o por cada consulta ?
+    cnx = None
     try:
         cnx = pymysql.connect(**mysql_config)
         cursor = cnx.cursor()
@@ -108,10 +147,11 @@ def login():
                 print ("password estaba mal")
                 ret = {"status": "FAIL", "msg": "usuario y/o password invalido"}
 
-        cnx.commit()
+
         cursor.close()
     except pymysql.Error as err:
         print "Failed to insert data: {}".format(err)
+        ret = {"status": "FAIL", "msg": err}
     finally:
         if cnx:
             cnx.close()
@@ -129,8 +169,8 @@ def register():
     psw = data['password']
     psw2 = data['password2']
 
-    u = usuarios.get(usr)
 
+    cnx = None
     try:
         cnx = pymysql.connect(**mysql_config)
         cursor = cnx.cursor()
@@ -170,6 +210,8 @@ def register():
         cursor.close()
     except pymysql.Error as err:
         print "Failed to insert data: {}".format(err)
+        ret = {"status":"FAIL", "msg":err}
+
     finally:
         if cnx:
             cnx.close()
@@ -178,4 +220,5 @@ def register():
 
 
 
-run(app, host='127.0.0.1', port=8081)
+init_db()
+run(app, host='0.0.0.0', port=8081)

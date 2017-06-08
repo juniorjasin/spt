@@ -39,7 +39,7 @@ app.get('/test', function (req, res) {
 
         var options = {
             method: 'GET',
-            uri: 'http://localhost:8081/test', // autenticacion (api ptyhon)
+            uri: 'http://auth-svc:8081/test', // autenticacion (api ptyhon)
             headers: {
               'Authorization':'Bearer ' +sess.token,
               'content-type': 'application/json'
@@ -93,7 +93,7 @@ app.post('/verify_user', function (req, res) {
     // le hago un post a mi servicio para que controle los datos
       var options = {
           method: 'POST',
-          uri: 'http://localhost:8081/login', // autenticacion (api ptyhon)
+          uri: 'http://auth-svc:8081/login', // autenticacion (api ptyhon)
           headers: {
             'content-type': 'application/json'
           },
@@ -146,7 +146,7 @@ app.post('/create_user', function (req, res) {
       // le hago un post a mi servicio para que controle los datos
         var options = {
             method: 'POST',
-            uri: 'http://localhost:8081/register', // autenticacion (api ptyhon)
+            uri: 'http://auth-svc:8081/register', // autenticacion (api ptyhon)
             headers: {
               'content-type': 'application/json'
             },
